@@ -1,0 +1,40 @@
+[gd_scene load_steps=4 format=2]
+
+[ext_resource path="res://scenes/ShelfSupport.tscn" type="PackedScene" id=1]
+[ext_resource path="res://scenes/Shelf.tscn" type="PackedScene" id=2]
+[ext_resource path="res://scenes/StorageSection.gd" type="Script" id=3]
+
+[node name="StorageRack" type="Spatial"]
+script = ExtResource( 3 )
+storage_children_root = NodePath("Shelves")
+
+[node name="Supports" type="Spatial" parent="."]
+
+[node name="ShelfSupport" parent="Supports" instance=ExtResource( 1 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -0.75, 1.5, 0.3 )
+
+[node name="ShelfSupport2" parent="Supports" instance=ExtResource( 1 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0.75, 1.5, 0.3 )
+
+[node name="ShelfSupport3" parent="Supports" instance=ExtResource( 1 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -0.75, 1.5, -0.3 )
+
+[node name="ShelfSupport4" parent="Supports" instance=ExtResource( 1 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0.75, 1.5, -0.3 )
+
+[node name="Shelves" type="Spatial" parent="."]
+
+[node name="Shelf" parent="Shelves" instance=ExtResource( 2 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.17, 0 )
+
+[node name="Shelf2" parent="Shelves" instance=ExtResource( 2 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.87, 0 )
+
+[node name="Shelf3" parent="Shelves" instance=ExtResource( 2 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.57, 0 )
+
+[node name="Shelf4" parent="Shelves" instance=ExtResource( 2 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.27, 0 )
+
+[node name="Shelf5" parent="Shelves" instance=ExtResource( 2 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.97, 0 )
