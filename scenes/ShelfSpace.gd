@@ -27,7 +27,8 @@ func set_highlight(value):
 
 
 func _on_ShelfSpace_body_entered(body):
-	set_box(body)
+	if body.is_in_group("boxes"):
+		set_box(body)
 
 
 func _on_ShelfSpace_body_exited(body):

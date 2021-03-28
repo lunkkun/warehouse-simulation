@@ -3,6 +3,7 @@ extends KinematicBody
 
 signal box_picked
 signal box_placed
+signal approached
 
 const APPROACH_DISTANCE = 1.5
 const PICK_DISTANCE = 0.74
@@ -12,23 +13,26 @@ const ROTATE_SPEED = 180.0
 const ARM_SPEED = 2.0
 const PICK_SPEED = 2.0
 
+var lane = null
+
 onready var _arm = $Arm
 onready var _box_holder = $Arm/BoxHolder
 onready var _tween = $Tween
+onready var _arm_tween = $Arm/Tween
 
 
-func pick_box(space):
-	_pick_or_place_box(space, true)
+func pick_box(space: Area, via = []):
+	_pick_or_place_box(space, via, true)
 
 
-func place_box(space):
-	_pick_or_place_box(space)
+func place_box(space: Area, via = []):
+	_pick_or_place_box(space, via)
 
 
-func _pick_or_place_box(space, pick_box = false):
-	_move_to_approach_position(space)
+func _pick_or_place_box(space: Area, via = [], pick_box = false):
+	_move_to_approach_position(space, via)
 	
-	yield(_tween, "tween_all_completed")
+	yield(self, "approached")
 	
 	var approach_position = translation
 	_move_to_pick_position(space)
@@ -36,7 +40,7 @@ func _pick_or_place_box(space, pick_box = false):
 	yield(_tween, "tween_all_completed")
 	
 	_pick_or_place(space, pick_box)
-	_move_back(approach_position)
+	move_to(approach_position, true)
 	
 	yield(_tween, "tween_all_completed")
 	
@@ -48,33 +52,40 @@ func _pick_or_place_box(space, pick_box = false):
 	else:
 		emit_signal("box_placed")
 
-func _move_to_approach_position(space):
+
+func _move_to_approach_position(space: Area, via = []):
 	var space_position = space.get_parent().to_global(space.translation)
 	var approach_position = space.get_parent().to_global(space.translation - space.approach_dir * APPROACH_DISTANCE)
 	var approach_dir = (space_position - approach_position).normalized()
-	
-	var rotation_angle = (-transform.basis.z).angle_to(approach_dir) * 180 / PI
-	var rotation_y = round(rotation_degrees.y + rotation_angle)
+
+	var forward = -transform.basis.z.normalized()
+	var rotation_angle = (forward).angle_to(approach_dir)
+	if forward.rotated(Vector3.UP, rotation_angle).dot(approach_dir) < 0:
+		rotation_angle = -rotation_angle
+	var rotation_y = round(rotation_degrees.y + rotation_angle * 180 / PI)
 	
 	var arm_height = approach_position.y + PICK_HEIGHT
-	var arm_distance = abs(_arm.translation.y - arm_height)
+	
+	move_arm(rotation_y, arm_height)
+	
+	for nav_point in via:
+		move_to(nav_point.global_transform.origin)
+		yield(_tween, "tween_all_completed")
 	
 	approach_position.y = 0
-	var distance = translation.distance_to(approach_position)
+	move_to(approach_position)
 	
-	_tween.interpolate_property(self, "translation", null, approach_position, distance / TRAVEL_SPEED)
-	_tween.interpolate_property(self, "rotation_degrees:y", null, rotation_y, rotation_angle / ROTATE_SPEED)
-	_tween.interpolate_property(_arm, "translation:y", null, arm_height, arm_distance / ARM_SPEED)
-	_tween.start()
+	yield(_tween, "tween_all_completed")
+	if (_arm_tween.is_active()):
+		yield(_arm_tween, "tween_all_completed")
+	
+	emit_signal("approached")
 
 
 func _move_to_pick_position(space):
 	var pick_position = space.get_parent().to_global(space.translation - space.approach_dir * PICK_DISTANCE)
 	pick_position.y = 0
-	var distance = translation.distance_to(pick_position)
-	
-	_tween.interpolate_property(self, "translation", null, pick_position, distance / PICK_SPEED)
-	_tween.start()
+	move_to(pick_position, true)
 
 
 func _pick_or_place(space, pick_box):
@@ -91,16 +102,18 @@ func _pick_or_place(space, pick_box):
 		space.highlight = false
 
 
-func _move_back(position):
+func move_to(position: Vector3, picking = false):
 	var distance = translation.distance_to(position)
-	_tween.interpolate_property(self, "translation", null, position, distance / PICK_SPEED)
-	_tween.start()
-
-
-func move_to(position, angle):
-	var distance = translation.distance_to(position)
-	var rot_distance = abs(rotation_degrees.y - angle)
+	var speed = PICK_SPEED if picking else TRAVEL_SPEED
 	
-	_tween.interpolate_property(self, "translation", null, position, distance / TRAVEL_SPEED)
-	_tween.interpolate_property(self, "rotation_degrees:y", null, angle, rot_distance / ROTATE_SPEED)
+	_tween.interpolate_property(self, "translation", null, position, distance / speed)
 	_tween.start()
+
+
+func move_arm(angle: float, height: float):
+	var rot_distance = abs(rotation_degrees.y - angle)
+	var arm_distance = abs(_arm.translation.y - height)
+	
+	_arm_tween.interpolate_property(self, "rotation_degrees:y", null, angle, rot_distance / ROTATE_SPEED)
+	_arm_tween.interpolate_property(_arm, "translation:y", null, height, arm_distance / ARM_SPEED)
+	_arm_tween.start()
