@@ -4,7 +4,7 @@
 [ext_resource path="res://scenes/StorageSection.gd" type="Script" id=2]
 [ext_resource path="res://scenes/Warehouse.gd" type="Script" id=3]
 [ext_resource path="res://scenes/Robot.tscn" type="PackedScene" id=4]
-[ext_resource path="res://scenes/Camera.gd" type="Script" id=5]
+[ext_resource path="res://scenes/CameraRig.gd" type="Script" id=5]
 
 [sub_resource type="Environment" id=1]
 ambient_light_color = Color( 1, 1, 1, 1 )
@@ -33,9 +33,12 @@ script = ExtResource( 3 )
 [node name="Environment" type="WorldEnvironment" parent="."]
 environment = SubResource( 1 )
 
-[node name="Camera" type="Camera" parent="."]
-transform = Transform( -1.62921e-07, -0.544639, 0.838671, 0, 0.838671, 0.544639, -1, 8.87331e-08, -1.36637e-07, 6.5, 5, 0 )
+[node name="CameraRig" type="Spatial" parent="."]
+transform = Transform( -1.62921e-07, 0, 1, 0, 1, 0, -1, 0, -1.62921e-07, 0, 0, 0 )
 script = ExtResource( 5 )
+
+[node name="Camera" type="Camera" parent="CameraRig"]
+transform = Transform( 1, 0, 0, 0, 0.838671, 0.544639, 0, -0.544639, 0.838671, 0, 5, 6.5 )
 
 [node name="Lighting" type="Spatial" parent="."]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, 0 )
